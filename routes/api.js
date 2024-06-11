@@ -9,36 +9,68 @@ module.exports = function (app) {
   app.route('/api/check')
     .post((req, res) => {
       // console.log(req.body)
-      const r = req.body;
-      const puzzle = r.puzzle;
-      const val = r.value;
-      let row = r.coordinate.split('')[0];
-      let col = r.coordinate.split('')[1];
+      const coordinate = req.body.coordinate;
+      const puzzle = req.body.puzzle;
+      const val = req.body.value;
+      if(!coordinate || !puzzle || !val){
+        return res.send({error: 'Required field(s) missing'})
+      }
+      const valid = solver.validate(puzzle)
+        if(valid) {
+          return res.send(valid)
+        }
+        console.log(coordinate)
+      if(coordinate.length != 2) {
+        return res.send({error: 'Invalid coordinate'})
+      }
+      if(!(val >= 0 && val <= 9)) {
+        return res.send({error: "Invalid value"})
+      }
+      
+
+
+      let row = coordinate.split('')[0];
+      let col = coordinate.split('')[1];
       col--;
       row = getRowIndex(row.toUpperCase());
+      if(row == -1){
+        return res.send({error: 'Invalid coordinate'})
+      }
       console.log('Row: ' + row + '   Col: ' + col)
-      // solver.checkRowPlacement(puzzle, row, col, val)
-      // console.log(solver.checkColPlacement(puzzle, row, col, val))
-      // solver.checkRegionPlacement(puzzle, row, col, val)
+      let conflict = [];
       const ro = solver.checkRowPlacement(puzzle, row, col, val)
+      if (ro) conflict.push('row')
+      console.log(ro)
       const co = solver.checkColPlacement(puzzle, row, col, val)
+      if (co) conflict.push('column')
+      console.log(co)
       const re = solver.checkRegionPlacement(puzzle, row, col, val);
-      console.log({row: ro, column: co, region: re})
-      if(!ro && !co && !re) {
-        res.send(false)
-      }else res.send(true)
-      // res.send({row: ro, column: co, region: re})
+      if (re) conflict.push('region')
+      console.log(re)
+      if (!ro && !co && !re) {
+        return res.send({valid: true})
+      }
+      return res.send({valid: false, conflict: conflict})
 
     });
 
   app.route('/api/solve')
     .post((req, res) => {
       const puzzle = req.body.puzzle;
-      console.log(puzzle)
-      const board = solver.getRows(puzzle);
-      const solvedBoard = solver.solve(board, puzzle);
-      console.log(solvedBoard)
+      if (!puzzle) {
+        return res.send({error: 'Required field missing'})
+      }
+      const valid = solver.validate(puzzle)
+      if(valid) {
+        return res.send(valid);
+      }
+      const solution = solver.solve(puzzle);
+      console.log(solution)
+      if (typeof solution === 'object') {
+        return res.send(solution)
+      }
       // solver.checkRegionPlacement(puzzle);
+      res.send({solution})
     });
 };
 
@@ -71,6 +103,8 @@ function getRowIndex(row) {
     case 'I':
       row = 8;
       break;
+    default:
+      row = -1;
   }
   return row;
 }
