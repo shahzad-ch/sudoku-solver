@@ -57,7 +57,6 @@ class SudokuSolver {
   checkColPlacement(puzzleString, row, column, value) {
     const arr = this.getCols(puzzleString)
     if (arr[row][column] == value) {
-      console.log('init')
       return false;
     }
     return arr[column].includes(value.toString())
@@ -70,7 +69,6 @@ class SudokuSolver {
     const index = r * 3 + c;
     // console.log(arr[index])
     if (arr[index][(row % 3) * 3 + (column % 3)] == value) {
-      console.log('init')
       return false;
     }
     return arr[index].includes(value.toString());

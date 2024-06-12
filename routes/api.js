@@ -19,11 +19,11 @@ module.exports = function (app) {
         if(valid) {
           return res.send(valid)
         }
-        console.log(coordinate)
+        // console.log(coordinate)
       if(coordinate.length != 2) {
         return res.send({error: 'Invalid coordinate'})
       }
-      if(!(val >= 0 && val <= 9)) {
+      if(!(val > 0 && val <= 9) || /[^0-9]/.test(val)) {
         return res.send({error: "Invalid value"})
       }
       
@@ -33,20 +33,17 @@ module.exports = function (app) {
       let col = coordinate.split('')[1];
       col--;
       row = getRowIndex(row.toUpperCase());
-      if(row == -1){
+      if(row == -1 || col == -1){
         return res.send({error: 'Invalid coordinate'})
       }
-      console.log('Row: ' + row + '   Col: ' + col)
+      // console.log('Row: ' + row + '   Col: ' + col)
       let conflict = [];
       const ro = solver.checkRowPlacement(puzzle, row, col, val)
       if (ro) conflict.push('row')
-      console.log(ro)
       const co = solver.checkColPlacement(puzzle, row, col, val)
       if (co) conflict.push('column')
-      console.log(co)
       const re = solver.checkRegionPlacement(puzzle, row, col, val);
       if (re) conflict.push('region')
-      console.log(re)
       if (!ro && !co && !re) {
         return res.send({valid: true})
       }
@@ -65,7 +62,7 @@ module.exports = function (app) {
         return res.send(valid);
       }
       const solution = solver.solve(puzzle);
-      console.log(solution)
+      // console.log(solution)
       if (typeof solution === 'object') {
         return res.send(solution)
       }
